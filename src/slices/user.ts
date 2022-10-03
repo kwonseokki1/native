@@ -1,5 +1,9 @@
 import {createSlice} from '@reduxjs/toolkit';
 
+// store -> Root reducer(state) -> user slice, order slice
+// state.user
+// state.order
+
 const initialState = {
   name: '',
   email: '',
@@ -15,7 +19,7 @@ const userSlice = createSlice({
       state.accessToken = action.payload.accessToken;
     },
   },
-  extraReducers: builder => {},
+  extraReducers: builder => {}, // 비동기액션 만들떄
 });
 
 export default userSlice;
