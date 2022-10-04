@@ -140,6 +140,7 @@ app.post('/login', (req, res, next) => {
     },
   });
 });
+
 app.post('/logout', verifyToken, (req, res, next) => {
   delete users[res.locals.email];
   res.json({message: 'ok'});
@@ -272,6 +273,7 @@ io.on('connection', socket => {
       clearInterval(orderId);
     }
   });
+  // 주문을 받음
   socket.on('acceptOrder', () => {
     if (orderId) {
       clearInterval(orderId);
@@ -291,9 +293,11 @@ io.on('connection', socket => {
         rider: Math.random() > 0.5 ? shortid() : undefined,
       };
       orders.push(order);
+      // order 라는 key값에 주문을 보냄
       io.emit('order', order);
     }, 10_000);
   });
+
   socket.on('disconnect', () => {
     console.log(socket.id, '연결 끊었습니다..');
     if (id) {

@@ -7,8 +7,13 @@ import Orders from './src/pages/Orders';
 import Delivery from './src/pages/Deliverys';
 import SignIn from './src/pages/SignIn';
 import SignUp from './src/pages/SignUp';
-import {useSelector} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from './src/store/reducer';
+import useSocket from './src/hooks/useSocket';
+import EncryptedStorage from 'react-native-encrypted-storage';
+import axios, {AxiosError} from 'axios';
+import Config from 'react-native-config';
+import userSlice from './src/slices/user';
 
 // 로그인 했을떄
 export type LoggedInParamList = {
@@ -29,6 +34,69 @@ const Stack = createNativeStackNavigator();
 
 function AppInner() {
   const isLoggedIn = useSelector((state: RootState) => !!state.user.email);
+  const [socket, disconnect] = useSocket();
+  const dispatch = useDispatch();
+  React.useEffect(() => {
+    const getTokenAndRefresh = async () => {
+      try {
+        const token = await EncryptedStorage.getItem('refreshToken');
+        if (!token) {
+          return;
+        }
+        const response = await axios.post(
+          `${Config.API_URL}/refreshToken`,
+          {},
+          {
+            headers: {
+              authorization: `Bearer ${token}`,
+            },
+          },
+        );
+        dispatch(
+          userSlice.actions.setUser({
+            name: response.data.data.name,
+            email: response.data.data.email,
+            accessToken: response.data.data.accessToken,
+          }),
+        );
+      } catch (error) {
+        console.error(error);
+        if ((error as AxiosError).response?.data.code === 'expired') {
+          Alert.alert('알림', '다시 로그인 해주세요.');
+        }
+      } finally {
+      }
+      // TODO: 스플래시 스크린 없애기
+    };
+
+    getTokenAndRefresh();
+  }, [dispatch]);
+
+  React.useEffect(() => {
+    const callback = (data: any) => {
+      console.log('helloCallback', data);
+    };
+
+    if (socket && isLoggedIn) {
+      // 주문을 받겠다고 선언
+      socket.emit('acceptOrder', 'hello');
+      // 데이터 전달받음
+      socket.on('order', callback);
+    }
+
+    return () => {
+      if (socket) {
+        socket.off('order', callback);
+      }
+    };
+  }, [isLoggedIn, socket]);
+
+  React.useEffect(() => {
+    if (!isLoggedIn) {
+      console.log('!isLoggedIn', !isLoggedIn);
+      disconnect();
+    }
+  }, [isLoggedIn, disconnect]);
   // const [isLoggedIn, setLoggedIn] = useState(false);
   return (
     <NavigationContainer>
