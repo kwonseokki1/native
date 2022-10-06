@@ -14,7 +14,7 @@ import EncryptedStorage from 'react-native-encrypted-storage';
 import axios, {AxiosError} from 'axios';
 import Config from 'react-native-config';
 import userSlice from './src/slices/user';
-
+import {orderSlice} from './src/slices/order';
 // 로그인 했을떄
 export type LoggedInParamList = {
   Orders: undefined;
@@ -75,6 +75,7 @@ function AppInner() {
   React.useEffect(() => {
     const callback = (data: any) => {
       console.log('helloCallback', data);
+      dispatch(orderSlice.actions.addOrder(data));
     };
 
     if (socket && isLoggedIn) {

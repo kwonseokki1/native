@@ -8,11 +8,11 @@ import {createSlice} from '@reduxjs/toolkit';
 // dispatch: action을 실제로 실행하는 함수
 // reducer: action이 실제로 실행되면 state를 바꾸는 로직
 
-
 const initialState = {
   name: '',
   email: '',
   accessToken: '',
+  money: 0,
 };
 
 const userSlice = createSlice({
@@ -23,6 +23,9 @@ const userSlice = createSlice({
       state.email = action.payload.email;
       state.name = action.payload.name;
       state.accessToken = action.payload.accessToken;
+    },
+    setMoney(state, action) {
+      state.money = action.payload;
     },
   },
   extraReducers: builder => {}, // 비동기액션 만들떄
