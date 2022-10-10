@@ -27,6 +27,9 @@ const userSlice = createSlice({
     setMoney(state, action) {
       state.money = action.payload;
     },
+    setAccessToken(state, action) {
+      state.accessToken = action.payload;
+    },
   },
   extraReducers: builder => {}, // 비동기액션 만들떄
 });

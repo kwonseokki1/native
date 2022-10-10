@@ -1,6 +1,13 @@
 import axios, {AxiosError} from 'axios';
 import React, {useCallback, useState} from 'react';
-import {View, StyleSheet, Pressable, Text, Alert} from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  Text,
+  Alert,
+  Dimensions,
+} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {Order, orderSlice} from '../slices/order';
 import {useAppDispatch} from '../store';
@@ -8,8 +15,11 @@ import {RootState} from '../store/reducer';
 import Config from 'react-native-config';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
 import {LoggedInParamList} from '../../AppInner';
+import EncryptedStorage from 'react-native-encrypted-storage/lib/typescript/EncryptedStorage';
+import NaverMapView, {Marker, Path} from 'react-native-nmap';
 
 function EachOrder({item}: {item: Order}) {
+  const {start, end} = item;
   const navigation = useNavigation<NavigationProp<LoggedInParamList>>();
   const dispatch = useAppDispatch();
   const [detail, setDetail] = useState<boolean>(false); //false
@@ -34,6 +44,7 @@ function EachOrder({item}: {item: Order}) {
       if (errorResponse?.status === 400) {
         Alert.alert('알림', errorResponse.data.message);
       }
+      // access 토큰이 만료된경우
     }
     dispatch(orderSlice.actions.acceptOrder(item.orderId));
   }, [accessToken, navigation, item.orderId]);
@@ -50,7 +61,45 @@ function EachOrder({item}: {item: Order}) {
         {detail && (
           <View>
             <View>
-              <Text>네이버맵이 들어갈 장소</Text>
+              <View
+                style={{
+                  width: Dimensions.get('window').width - 30,
+                  height: 200,
+                  marginTop: 10,
+                }}>
+                <NaverMapView
+                  style={{width: '100%', height: '100%'}}
+                  zoomControl={false}
+                  center={{
+                    zoom: 10,
+                    tilt: 50,
+                    latitude: (start.latitude + end.latitude) / 2,
+                    longitude: (start.longitude + end.longitude) / 2,
+                  }}>
+                  <Marker
+                    coordinate={{
+                      latitude: start.latitude,
+                      longitude: start.longitude,
+                    }}
+                    pinColor="blue"
+                  />
+                  <Path
+                    coordinates={[
+                      {
+                        latitude: start.latitude,
+                        longitude: start.longitude,
+                      },
+                      {latitude: end.latitude, longitude: end.longitude},
+                    ]}
+                  />
+                  <Marker
+                    coordinate={{
+                      latitude: end.latitude,
+                      longitude: end.longitude,
+                    }}
+                  />
+                </NaverMapView>
+              </View>
             </View>
             <View style={styles.buttonWrapper}>
               <Pressable onPress={onAccept} style={styles.acceptButton}>

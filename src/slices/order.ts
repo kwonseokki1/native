@@ -12,7 +12,7 @@ export interface Order {
 
 export interface initialState {
   orders: Order[];
-  deliveries?: Order[];
+  deliveries: Order[];
 }
 
 const initialState: initialState = {

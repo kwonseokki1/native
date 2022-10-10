@@ -36,6 +36,41 @@ function AppInner() {
   const isLoggedIn = useSelector((state: RootState) => !!state.user.email);
   const [socket, disconnect] = useSocket();
   const dispatch = useDispatch();
+
+  // axios interceptor
+  React.useEffect(() => {
+    // 성공했을떄는 첫번째 함수
+    axios.interceptors.response.use(
+      response => {
+        console.log(response);
+        return response;
+      },
+      // 에러가 발생했을때 두번째 에러함수 실행
+      async error => {
+        const {
+          config, // 원래 요청을 가지고있음
+          response: {status},
+        } = error;
+        if (status === 419) {
+          if (error.response.data.code === 'expired') {
+            const originRequest = config;
+            const refreshToken = await EncryptedStorage.getItem('refreshToken');
+
+            const {data} = await axios.post(
+              `${Config.API_URL}/refreshToken`,
+              {},
+              {headers: {authorization: `Bearer ${refreshToken}`}},
+            );
+
+            dispatch(userSlice.actions.setAccessToken(data.data.accessToken));
+            originRequest.headers.authorization = `Bearer ${data.data.accessToken}`;
+          }
+        }
+        return Promise.reject(error);
+      },
+    );
+  }, []);
+
   React.useEffect(() => {
     const getTokenAndRefresh = async () => {
       try {
